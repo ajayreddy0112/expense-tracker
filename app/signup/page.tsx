@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { signupSchema, type SignupInput } from "@/lib/schemas";
+import { AuthMarketingRail } from "@/components/AuthMarketingRail";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -45,137 +46,144 @@ export default function SignupPage() {
 
   if (emailSent) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-        <div className="w-full max-w-md">
-          <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-xl ring-1 ring-slate-200 dark:ring-slate-800 p-8 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Check your email
+      <main className="auth">
+        <section className="auth-pane">
+          <div className="brand">
+            <div className="brand-mark">₹</div>
+            <span>Spendline</span>
+          </div>
+
+          <div className="auth-form">
+            <div className="eyebrow" style={{ marginBottom: 8 }}>
+              One last step
+            </div>
+            <h1 className="display auth-display">
+              Check your <span className="accent">email</span>.
             </h1>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+            <p className="muted" style={{ fontSize: 14, lineHeight: 1.55, marginBottom: 24 }}>
               We sent a confirmation link to{" "}
-              <span className="font-medium text-slate-900 dark:text-slate-100">
+              <span style={{ color: "var(--ink-900)", fontWeight: 500 }}>
                 {emailSent}
               </span>
               . Click the link to verify your account, then sign in.
             </p>
-            <Link
-              href="/login"
-              className="mt-6 inline-block rounded-lg bg-slate-900 dark:bg-slate-100 px-4 py-2.5 text-sm font-medium text-white dark:text-slate-900 shadow-sm transition hover:bg-slate-800 dark:hover:bg-white"
-            >
+            <Link href="/login" className="btn accent block">
               Back to sign in
             </Link>
           </div>
-        </div>
+
+          <div className="auth-foot">
+            Didn&apos;t get it? Check your spam folder, or try signing up again.
+          </div>
+        </section>
+
+        <AuthMarketingRail />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Create your account
+    <main className="auth">
+      <section className="auth-pane">
+        <div className="brand">
+          <div className="brand-mark">₹</div>
+          <span>Spendline</span>
+        </div>
+
+        <form
+          className="auth-form"
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
+          <div className="eyebrow" style={{ marginBottom: 8 }}>
+            Make it official
+          </div>
+          <h1 className="display auth-display">
+            Let&apos;s find out
+            <br />
+            <span className="accent">together</span>.
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Start tracking your expenses in seconds
-          </p>
-        </div>
 
-        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-xl ring-1 ring-slate-200 dark:ring-slate-800 p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                {...register("email")}
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:border-slate-100 dark:focus:ring-slate-100/20"
-              />
-              {errors.email && (
-                <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="At least 6 characters"
-                {...register("password")}
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:border-slate-100 dark:focus:ring-slate-100/20"
-              />
-              {errors.password && (
-                <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-              >
-                Confirm password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                placeholder="Re-enter your password"
-                {...register("confirmPassword")}
-                className="block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:border-slate-100 dark:focus:ring-slate-100/20"
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
-
-            {serverError && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300 ring-1 ring-red-200 dark:ring-red-900">
-                {serverError}
-              </div>
+          <div style={{ marginBottom: 14 }}>
+            <label htmlFor="email" className="label">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              aria-invalid={!!errors.email}
+              className="input"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="field-error">{errors.email.message}</p>
             )}
+          </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-lg bg-slate-900 dark:bg-slate-100 px-4 py-2.5 text-sm font-medium text-white dark:text-slate-900 shadow-sm transition hover:bg-slate-800 dark:hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? "Creating account…" : "Create account"}
-            </button>
-          </form>
-        </div>
+          <div style={{ marginBottom: 14 }}>
+            <label htmlFor="password" className="label">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="At least 6 characters"
+              aria-invalid={!!errors.password}
+              className="input"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="field-error">{errors.password.message}</p>
+            )}
+          </div>
 
-        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-slate-900 dark:text-slate-100 hover:underline"
+          <div style={{ marginBottom: 18 }}>
+            <label htmlFor="confirmPassword" className="label">
+              Confirm password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Re-enter your password"
+              aria-invalid={!!errors.confirmPassword}
+              className="input"
+              {...register("confirmPassword")}
+            />
+            {errors.confirmPassword && (
+              <p className="field-error">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          {serverError && (
+            <div className="server-error" role="alert" style={{ marginBottom: 16 }}>
+              {serverError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="btn accent block"
+            disabled={isSubmitting}
           >
-            Sign in
-          </Link>
-        </p>
-      </div>
+            {isSubmitting ? "Creating account…" : "Create my account"}
+          </button>
+
+          <div className="auth-fineprint">
+            Already have one?{" "}
+            <Link href="/login">Sign in →</Link>
+          </div>
+        </form>
+
+        <div className="auth-foot">
+          Your expenses are yours alone — encrypted at rest, never shared, never sold.
+        </div>
+      </section>
+
+      <AuthMarketingRail />
     </main>
   );
 }

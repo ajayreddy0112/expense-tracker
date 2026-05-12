@@ -14,3 +14,10 @@ npm-debug.log*
 
 next-env.d.ts
 .vercel
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Supabase CLI local cache
+supabase/.temp/
+supabase/.branches/
