@@ -1,19 +1,32 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
-import { formatINR } from "@/lib/dates";
+import { ProfileEditForm } from "@/components/ProfileEditForm";
+import { ageFromDOB, formatINR, parseISODate } from "@/lib/dates";
+import type { Profile } from "@/lib/types";
 
-function initialsOf(email: string | undefined): string {
-  if (!email) return "—";
-  const local = email.split("@")[0] ?? "";
-  return local.slice(0, 2).toUpperCase() || "—";
+function initialsOf(profile: Profile | null, email: string | undefined): string {
+  const first = profile?.first_name?.trim() ?? "";
+  const last = profile?.last_name?.trim() ?? "";
+  if (first && last) return (first[0] + last[0]).toUpperCase();
+  if (first) return first.slice(0, 2).toUpperCase();
+  if (last) return last.slice(0, 2).toUpperCase();
+  if (email) return email.slice(0, 2).toUpperCase();
+  return "—";
 }
 
-function nameOf(email: string | undefined): string {
-  if (!email) return "Tracker";
-  const local = email.split("@")[0] ?? "";
-  return local
-    .replace(/[._-]+/g, " ")
-    .replace(/\b\w/g, (m) => m.toUpperCase());
+function displayName(profile: Profile | null): string {
+  const first = profile?.first_name?.trim() ?? "";
+  const last = profile?.last_name?.trim() ?? "";
+  const full = [first, last].filter(Boolean).join(" ").trim();
+  return full || "Complete your profile";
+}
+
+function genderLabel(gender: Profile["gender"] | undefined): string {
+  if (!gender) return "—";
+  switch (gender) {
+    case "male":   return "Male";
+    case "female": return "Female";
+  }
 }
 
 const SETTINGS = [
@@ -30,14 +43,21 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
 
   const email = user?.email ?? undefined;
-  const displayName = nameOf(email);
-  const initials = initialsOf(email);
 
-  const { data, error } = await supabase
-    .from("expenses")
-    .select("amount, spent_on");
+  const [{ data: profileRow, error: profileError }, { data: expRows, error: expensesError }] =
+    await Promise.all([
+      user
+        ? supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      supabase.from("expenses").select("amount, spent_on"),
+    ]);
 
-  const rows = (data ?? []) as { amount: number | string; spent_on: string }[];
+  const profile: Profile | null = (profileRow as Profile | null) ?? null;
+
+  const initials = initialsOf(profile, email);
+  const fullName = displayName(profile);
+
+  const rows = (expRows ?? []) as { amount: number | string; spent_on: string }[];
   const total = rows.reduce(
     (s, r) => s + (typeof r.amount === "string" ? parseFloat(r.amount) : r.amount),
     0,
@@ -59,6 +79,11 @@ export default async function ProfilePage() {
         })
       : "—";
 
+  const age =
+    profile?.date_of_birth
+      ? ageFromDOB(parseISODate(profile.date_of_birth))
+      : null;
+
   return (
     <main className="content">
       <div className="page-head">
@@ -79,7 +104,7 @@ export default async function ProfilePage() {
       >
         <div className="m-avatar-lg">{initials}</div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 17, fontWeight: 500 }}>{displayName}</div>
+          <div style={{ fontSize: 17, fontWeight: 500 }}>{fullName}</div>
           <div
             className="dim"
             style={{
@@ -91,8 +116,24 @@ export default async function ProfilePage() {
           >
             {email ?? "—"}
           </div>
+          {profile && (
+            <div className="dim sm" style={{ marginTop: 2 }}>
+              {genderLabel(profile.gender)}
+              {age !== null ? ` · ${age} years old` : ""}
+            </div>
+          )}
         </div>
       </section>
+
+      {profileError && (
+        <div className="server-error" role="alert" style={{ marginBottom: 14 }}>
+          {profileError.message}
+        </div>
+      )}
+
+      <div style={{ marginBottom: 14 }}>
+        <ProfileEditForm initial={profile} />
+      </div>
 
       <section className="card card-flush" style={{ marginBottom: 14 }}>
         <div className="m-cat-row">
@@ -127,9 +168,9 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      {error && (
+      {expensesError && (
         <div className="server-error" role="alert" style={{ marginBottom: 14 }}>
-          {error.message}
+          {expensesError.message}
         </div>
       )}
 
