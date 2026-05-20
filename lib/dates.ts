@@ -36,6 +36,14 @@ export function fmtDay(d: Date): string {
   return d.toLocaleString("en-IN", { day: "numeric", month: "short" });
 }
 
+export function ageFromDOB(dob: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
 export function formatINR(n: number, opts?: { full?: boolean }): string {
   if (opts?.full) {
     return n.toLocaleString("en-IN", {

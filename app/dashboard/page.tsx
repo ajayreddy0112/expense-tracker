@@ -42,14 +42,20 @@ export default async function DashboardPage() {
     today.getDate(),
   );
 
-  const expRes = await supabase
-    .from("expenses")
-    .select("id, amount, spent_on, note, category_id, categories ( name, icon )")
-    .gte("spent_on", fmtISODate(prevStart))
-    .lte("spent_on", fmtISODate(today))
-    .order("spent_on", { ascending: false });
+  const [expRes, profileRes] = await Promise.all([
+    supabase
+      .from("expenses")
+      .select("id, amount, spent_on, note, category_id, categories ( name, icon )")
+      .gte("spent_on", fmtISODate(prevStart))
+      .lte("spent_on", fmtISODate(today))
+      .order("spent_on", { ascending: false }),
+    user
+      ? supabase.from("profiles").select("first_name").eq("id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
 
   const { data, error } = expRes;
+  const firstName = (profileRes.data as { first_name?: string } | null)?.first_name?.trim();
 
   if (error) {
     return (
@@ -153,7 +159,7 @@ export default async function DashboardPage() {
     : 0;
 
   const monthName = shortMonth(today);
-  const greetName = user?.email?.split("@")[0] ?? "there";
+  const greetName = firstName || user?.email?.split("@")[0] || "there";
   const monthTotalForCats = byCat.reduce((s, c) => s + c.total, 0) || 1;
 
   return (

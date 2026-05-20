@@ -4,12 +4,15 @@ import { SidebarNav } from "@/components/SidebarNav";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ExpenseModals } from "@/components/ExpenseModals";
 import { MobileTabBar } from "@/components/MobileTabBar";
-import type { Category } from "@/lib/types";
+import type { Category, Profile } from "@/lib/types";
 
-function initialsOf(email: string | undefined): string {
-  if (!email) return "—";
-  const local = email.split("@")[0] ?? "";
-  return local.slice(0, 2).toUpperCase() || "—";
+function initialsOf(profile: Profile | null): string {
+  const first = profile?.first_name?.trim() ?? "";
+  const last = profile?.last_name?.trim() ?? "";
+  if (first && last) return (first[0] + last[0]).toUpperCase();
+  if (first) return first.slice(0, 2).toUpperCase();
+  if (last) return last.slice(0, 2).toUpperCase();
+  return "—";
 }
 
 export default async function DashboardLayout({
@@ -26,11 +29,12 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data: catRows } = await supabase
-    .from("categories")
-    .select("id, name, icon")
-    .order("name");
+  const [{ data: catRows }, { data: profileRow }] = await Promise.all([
+    supabase.from("categories").select("id, name, icon").order("name"),
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+  ]);
   const categories: Category[] = (catRows ?? []) as Category[];
+  const profile: Profile | null = (profileRow as Profile | null) ?? null;
 
   return (
     <ExpenseModals categories={categories}>
@@ -45,7 +49,7 @@ export default async function DashboardLayout({
 
           <div className="sidebar-foot">
             <div className="avatar" aria-hidden="true">
-              {initialsOf(user.email)}
+              {initialsOf(profile)}
             </div>
             <div className="sidebar-foot-meta">
               <div className="sidebar-foot-email" title={user.email ?? ""}>
