@@ -7,9 +7,16 @@ type Props = {
   onClose: () => void;
   footer?: React.ReactNode;
   children: React.ReactNode;
+  variant?: "centered" | "sheet";
 };
 
-export function Modal({ title, onClose, footer, children }: Props) {
+export function Modal({
+  title,
+  onClose,
+  footer,
+  children,
+  variant = "centered",
+}: Props) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +35,7 @@ export function Modal({ title, onClose, footer, children }: Props) {
 
   return (
     <div
-      className="modal-overlay"
+      className={`modal-overlay${variant === "sheet" ? " sheet" : ""}`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

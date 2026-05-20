@@ -1,9 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AreaChart } from "@/components/AreaChart";
 import { DonutChart, type DonutSlice } from "@/components/DonutChart";
-import { ExpenseModals } from "@/components/ExpenseModals";
 import { AddExpenseButton } from "@/components/AddExpenseButton";
 import { ExpenseList } from "@/components/ExpenseList";
+import { MobileHero } from "@/components/MobileHero";
+import { MobileRecentList } from "@/components/MobileRecentList";
 import { metaFor } from "@/lib/categories";
 import {
   daysInMonth,
@@ -15,7 +16,7 @@ import {
   shortMonth,
   startOfMonth,
 } from "@/lib/dates";
-import type { Category, ExpenseLite } from "@/lib/types";
+import type { ExpenseLite } from "@/lib/types";
 
 type Row = {
   id: string;
@@ -41,17 +42,13 @@ export default async function DashboardPage() {
     today.getDate(),
   );
 
-  const [catsRes, expRes] = await Promise.all([
-    supabase.from("categories").select("id, name, icon").order("name"),
-    supabase
-      .from("expenses")
-      .select("id, amount, spent_on, note, category_id, categories ( name, icon )")
-      .gte("spent_on", fmtISODate(prevStart))
-      .lte("spent_on", fmtISODate(today))
-      .order("spent_on", { ascending: false }),
-  ]);
+  const expRes = await supabase
+    .from("expenses")
+    .select("id, amount, spent_on, note, category_id, categories ( name, icon )")
+    .gte("spent_on", fmtISODate(prevStart))
+    .lte("spent_on", fmtISODate(today))
+    .order("spent_on", { ascending: false });
 
-  const categories: Category[] = (catsRes.data ?? []) as Category[];
   const { data, error } = expRes;
 
   if (error) {
@@ -155,29 +152,31 @@ export default async function DashboardPage() {
     ? monthTotal / monthExpenses.length
     : 0;
 
-  const hasData = monthExpenses.length > 0;
   const monthName = shortMonth(today);
   const greetName = user?.email?.split("@")[0] ?? "there";
+  const monthTotalForCats = byCat.reduce((s, c) => s + c.total, 0) || 1;
 
   return (
-    <ExpenseModals categories={categories}>
-      <main className="content">
-        <div className="page-head">
-          <div>
-            <div className="eyebrow">{monthLabel(today)} · so far</div>
-            <h1>Dashboard</h1>
-            <div className="sub">
-              Hi {greetName} — quietly tallying your rupees.
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn ghost sm" disabled title="Coming soon">
-              Export CSV
-            </button>
-            <AddExpenseButton />
+    <main className="content">
+      {/* Page header — same on both, with the desktop-only Add button */}
+      <div className="page-head">
+        <div>
+          <div className="eyebrow">{monthLabel(today)} · so far</div>
+          <h1>Dashboard</h1>
+          <div className="sub desktop-only">
+            Hi {greetName} — quietly tallying your rupees.
           </div>
         </div>
+        <div className="desktop-only" style={{ display: "flex", gap: 8 }}>
+          <button className="btn ghost sm" disabled title="Coming soon">
+            Export CSV
+          </button>
+          <AddExpenseButton />
+        </div>
+      </div>
 
+      {/* ── Desktop layout ─────────────────────────────────────── */}
+      <div className="desktop-only">
         <div className="grid dash" style={{ marginBottom: 16 }}>
           <section className="card hero-card">
             <div className="eyebrow">Spent this month</div>
@@ -395,9 +394,83 @@ export default async function DashboardPage() {
             </section>
           </div>
         </div>
+      </div>
 
-        {hasData ? null : null /* keep server tree stable */}
-      </main>
-    </ExpenseModals>
+      {/* ── Mobile layout ──────────────────────────────────────── */}
+      <div className="mobile-only">
+        <MobileHero
+          monthDate={today}
+          monthTotal={monthTotal}
+          delta={delta}
+          deltaPct={deltaPct}
+          prevTotal={prevTotal}
+          byCat={byCat}
+          daily={daily}
+          dayOfMonth={dayOfMonth}
+          daysInMonth={dim}
+        />
+
+        {byCat.length > 0 && (
+          <>
+            <div className="m-sec">
+              <span className="title">By category</span>
+            </div>
+            <div className="m-card">
+              {byCat.slice(0, 5).map((c) => {
+                const color = metaFor(c.name).color;
+                return (
+                  <div key={c.id} className="m-cat-row">
+                    <div
+                      className="ic"
+                      style={{
+                        background: `color-mix(in oklch, ${color} 14%, var(--paper))`,
+                        borderColor: `color-mix(in oklch, ${color} 20%, var(--hairline))`,
+                      }}
+                    >
+                      {c.icon}
+                    </div>
+                    <div className="meta">
+                      <div className="name">{c.name}</div>
+                      <div className="bar-track">
+                        <div
+                          className="bar-fill"
+                          style={{
+                            width: `${(c.total / monthTotalForCats) * 100}%`,
+                            background: color,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="amt">
+                      ₹{formatINR(c.total)}
+                      <span className="pct">
+                        {Math.round((c.total / monthTotal) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        <div className="m-sec">
+          <span className="title">Recent</span>
+        </div>
+        {recent.length === 0 ? (
+          <div className="m-card">
+            <div className="m-empty">
+              <div className="emoji">🧾</div>
+              <div className="ttl">A clean slate.</div>
+              <div className="sub">Tap the + button to log your first one.</div>
+            </div>
+          </div>
+        ) : (
+          <div className="m-card">
+            <MobileRecentList expenses={recent} />
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

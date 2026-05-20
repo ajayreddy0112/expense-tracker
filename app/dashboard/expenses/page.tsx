@@ -1,8 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ExpenseModals } from "@/components/ExpenseModals";
 import { AddExpenseButton } from "@/components/AddExpenseButton";
 import { FilterBar } from "@/components/FilterBar";
 import { ExpenseList } from "@/components/ExpenseList";
+import { MobileExpenses } from "@/components/MobileExpenses";
 import {
   endOfMonth,
   fmtISODate,
@@ -99,49 +99,65 @@ export default async function ExpensesPage({
   const total = expenses.reduce((s, e) => s + e.amount, 0);
 
   return (
-    <ExpenseModals categories={categories}>
-      <main className="content">
-        <div className="page-head">
-          <div>
-            <div className="eyebrow">All expenses</div>
-            <h1>Expenses</h1>
-            <div className="sub">
-              {expenses.length} {expenses.length === 1 ? "entry" : "entries"} · ₹
-              {formatINR(total)} total
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn ghost sm" disabled title="Coming soon">
-              Export CSV
-            </button>
-            <AddExpenseButton />
+    <main className="content">
+      <div className="page-head">
+        <div>
+          <div className="eyebrow desktop-only">All expenses</div>
+          <h1>Expenses</h1>
+          <div className="sub">
+            {expenses.length} {expenses.length === 1 ? "entry" : "entries"} · ₹
+            {formatINR(total)} total
           </div>
         </div>
+        <div className="desktop-only" style={{ display: "flex", gap: 8 }}>
+          <button className="btn ghost sm" disabled title="Coming soon">
+            Export CSV
+          </button>
+          <AddExpenseButton />
+        </div>
+      </div>
 
-        <section className="card card-flush">
-          <FilterBar
-            categories={categories}
-            currentRange={range}
-            currentCategoryId={categoryId}
-          />
+      {/* ── Desktop layout ─────────────────────────────────────── */}
+      <section className="card card-flush desktop-only">
+        <FilterBar
+          categories={categories}
+          currentRange={range}
+          currentCategoryId={categoryId}
+        />
 
-          {error ? (
-            <div className="empty-card">
-              <div className="empty-emoji">⚠️</div>
-              <div className="display" style={{ fontSize: 24, marginBottom: 4 }}>
-                Couldn&apos;t load expenses.
-              </div>
-              <p className="muted">{error.message}</p>
+        {error ? (
+          <div className="empty-card">
+            <div className="empty-emoji">⚠️</div>
+            <div className="display" style={{ fontSize: 24, marginBottom: 4 }}>
+              Couldn&apos;t load expenses.
             </div>
-          ) : (
-            <ExpenseList
-              expenses={expenses}
-              empty={<EmptyState filtered={categoryId !== null || range !== "all"} />}
-            />
-          )}
-        </section>
-      </main>
-    </ExpenseModals>
+            <p className="muted">{error.message}</p>
+          </div>
+        ) : (
+          <ExpenseList
+            expenses={expenses}
+            empty={
+              <EmptyState filtered={categoryId !== null || range !== "all"} />
+            }
+          />
+        )}
+      </section>
+
+      {/* ── Mobile layout ──────────────────────────────────────── */}
+      <div className="mobile-only">
+        {error ? (
+          <div className="m-card">
+            <div className="m-empty">
+              <div className="emoji">⚠️</div>
+              <div className="ttl">Couldn&apos;t load expenses.</div>
+              <div className="sub">{error.message}</div>
+            </div>
+          </div>
+        ) : (
+          <MobileExpenses expenses={expenses} categories={categories} />
+        )}
+      </div>
+    </main>
   );
 }
 
