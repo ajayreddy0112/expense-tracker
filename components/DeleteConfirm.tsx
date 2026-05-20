@@ -38,6 +38,7 @@ export function DeleteConfirm({ expense, onClose }: Props) {
     <Modal
       title="Delete this expense?"
       onClose={onClose}
+      variant="sheet"
       footer={
         <>
           <span />

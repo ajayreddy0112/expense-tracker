@@ -88,6 +88,7 @@ export function ExpenseForm({
     <Modal
       title={isEdit ? "Edit expense" : "Add expense"}
       onClose={onClose}
+      variant="sheet"
       footer={
         <>
           {isEdit && onRequestDelete && initial ? (

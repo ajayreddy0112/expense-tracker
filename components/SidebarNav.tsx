@@ -13,6 +13,8 @@ type Item = {
 const ITEMS: Item[] = [
   { href: "/dashboard",          label: "Dashboard", icon: "◎" },
   { href: "/dashboard/expenses", label: "Expenses",  icon: "≡" },
+  { href: "/dashboard/insights", label: "Insights",  icon: "◔" },
+  { href: "/dashboard/profile",  label: "Profile",   icon: "◍" },
 ];
 
 export function SidebarNav() {

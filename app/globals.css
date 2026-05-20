@@ -982,3 +982,388 @@ button { font-family: inherit; }
   font-size: 18px;
   border: 0.5px solid var(--hairline);
 }
+
+/* —————————————————————————————————————————————————————————
+   Mobile pass — responsive shell + screens (≤ 959px)
+   Reference: Spendline Mobile design prototype.
+   ————————————————————————————————————————————————————————— */
+
+.mobile-only { display: none; }
+
+@media (max-width: 959px) {
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: revert; }
+
+  /* Shell collapses to single column; sidebar hidden in favor of bottom tabs */
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .shell-main { padding-bottom: 96px; }
+
+  /* Tighter outer padding on mobile */
+  .content { padding: 12px 16px 32px; }
+
+  /* Compact page header */
+  .page-head { margin-bottom: 14px; align-items: flex-start; }
+  .page-head h1 { font-size: 30px; }
+
+  /* Hide the existing dashboard hero on mobile (mobile uses .m-hero instead) */
+  /* Hide the secondary "by category" card / right-side dash-side on mobile */
+}
+
+/* ── Modal: sheet variant slides up from bottom on small screens ───────── */
+@media (max-width: 959px) {
+  .modal-overlay.sheet {
+    place-items: end stretch;
+    padding: 0;
+  }
+  .modal-overlay.sheet > .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: 28px 28px 0 0;
+    animation: sheet-up .26s cubic-bezier(.2,.9,.3,1.05);
+  }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* ── Bottom tab bar + FAB ───────────────────────────────────────────────── */
+.m-tabs {
+  position: fixed;
+  left: 12px; right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  height: 64px;
+  border-radius: 22px;
+  background: rgba(250, 250, 252, 0.82);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 0.5px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 30px -10px rgba(15, 22, 36, 0.18);
+  display: grid;
+  grid-template-columns: 1fr 1fr 64px 1fr 1fr;
+  align-items: center;
+  padding: 0 8px;
+  z-index: 30;
+}
+.m-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  font: 500 10.5px/1 var(--ui-font);
+  color: var(--ink-400);
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+}
+.m-tab.active { color: var(--ink-900); }
+.m-tab svg { opacity: 0.9; }
+.m-fab {
+  appearance: none;
+  width: 50px; height: 50px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  display: grid; place-items: center;
+  margin: 0 auto;
+  box-shadow: 0 8px 18px -4px color-mix(in oklch, var(--accent) 60%, transparent),
+              0 2px 4px rgba(0, 0, 0, .08);
+  border: 0;
+  cursor: pointer;
+}
+.m-fab:active { transform: translateY(0.5px); }
+
+/* ── Mobile hero card ───────────────────────────────────────────────────── */
+.m-hero {
+  background: var(--ink-900);
+  color: var(--paper);
+  border-radius: 22px;
+  padding: 22px 22px 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-2);
+  margin-bottom: 16px;
+}
+.m-hero::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 360px; height: 360px;
+  background: radial-gradient(closest-side, var(--accent) 0%, transparent 70%);
+  opacity: 0.32;
+  pointer-events: none;
+}
+.m-hero .eyebrow { color: oklch(75% 0.04 250); font-size: 11px; }
+.m-hero .amount-row {
+  display: flex; align-items: flex-end; gap: 6px;
+  margin-top: 8px;
+  line-height: 0.95;
+}
+.m-hero .cur {
+  font-family: var(--display-font);
+  font-style: italic;
+  font-size: 30px;
+  color: oklch(80% 0.03 250);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.m-hero .amt {
+  font-family: var(--display-font);
+  font-style: italic;
+  font-size: 64px;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.m-hero .delta {
+  margin-top: 12px;
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: oklch(78% 0.04 250);
+  flex-wrap: wrap;
+}
+.m-hero .delta b { color: var(--paper); font-weight: 500; }
+.m-hero-cats {
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.m-hero-cats > i { height: 100%; display: block; }
+.m-hero-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: oklch(80% 0.03 250);
+}
+.m-hero-legend .item { display: inline-flex; align-items: center; gap: 6px; }
+.m-hero-legend .dot {
+  width: 8px; height: 8px; border-radius: 3px;
+}
+.m-spark { margin-top: 14px; display: block; }
+.m-progress {
+  margin-top: 14px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.m-progress > div {
+  height: 100%;
+  background: var(--paper);
+  border-radius: 999px;
+}
+.m-progress-meta {
+  display: flex; justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: oklch(74% 0.03 250);
+}
+
+/* ── Mobile section header + card ───────────────────────────────────────── */
+.m-sec {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 2px 10px;
+}
+.m-sec .title {
+  font-family: var(--display-font);
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: -0.015em;
+}
+.m-sec .link {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+  cursor: pointer;
+}
+.m-card {
+  background: var(--paper);
+  border: 0.5px solid var(--hairline);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+/* ── Mobile category breakdown row (compact, used in cards) ─────────────── */
+.m-cat-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--hairline);
+}
+.m-cat-row:last-child { border-bottom: 0; }
+.m-cat-row .ic {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 16px;
+  background: var(--paper-2);
+  border: 0.5px solid var(--hairline);
+}
+.m-cat-row .meta { min-width: 0; }
+.m-cat-row .meta .name { font-size: 14.5px; font-weight: 500; }
+.m-cat-row .meta .bar-track { margin-top: 6px; height: 4px; background: var(--paper-3); }
+.m-cat-row .amt {
+  font-variant-numeric: tabular-nums;
+  font-size: 14.5px;
+  font-weight: 500;
+  text-align: right;
+}
+.m-cat-row .amt .pct {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-500);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+/* ── Mobile expense row (taller hit target, swipe-friendly later) ───────── */
+.m-row {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 0.5px solid var(--hairline);
+  background: var(--paper);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.m-row:last-child { border-bottom: 0; }
+.m-row:hover { background: var(--paper-2); }
+.m-row .ic {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 19px;
+  border: 0.5px solid var(--hairline);
+}
+.m-row .meta { min-width: 0; }
+.m-row .meta .ttl {
+  font-size: 14.5px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m-row .meta .sub {
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m-row .amt {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* ── Day group header (used by mobile grouped expenses) ─────────────────── */
+.m-day {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 18px 4px 8px;
+}
+.m-day .date {
+  font-family: var(--display-font);
+  font-style: italic;
+  font-size: 18px;
+}
+.m-day .meta {
+  font-size: 11.5px;
+  color: var(--ink-500);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Mobile search + horizontally-scrolling category chips ──────────────── */
+.m-search {
+  display: flex; align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--paper-2);
+  border: 0.5px solid var(--hairline);
+  color: var(--ink-500);
+  font-size: 14px;
+}
+.m-search input {
+  flex: 1;
+  border: 0; background: transparent;
+  outline: 0;
+  font: inherit;
+  color: var(--ink-900);
+  min-width: 0;
+}
+.m-search input::placeholder { color: var(--ink-400); }
+.m-search-clear {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-400);
+  cursor: pointer;
+  display: grid; place-items: center;
+  padding: 4px;
+}
+
+.m-chips {
+  display: flex;
+  gap: 8px;
+  margin: 12px -16px 14px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.m-chips::-webkit-scrollbar { display: none; }
+.m-chips .chip {
+  flex-shrink: 0;
+  font-size: 13px;
+  padding: 8px 14px;
+}
+
+/* ── Mobile empty state ─────────────────────────────────────────────────── */
+.m-empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.m-empty .emoji { font-size: 38px; opacity: 0.7; }
+.m-empty .ttl {
+  font-family: var(--display-font);
+  font-style: italic;
+  font-size: 24px;
+  margin: 8px 0 6px;
+}
+.m-empty .sub { color: var(--ink-500); font-size: 13.5px; }
+
+/* ── Mobile profile/insights helpers ────────────────────────────────────── */
+.m-avatar-lg {
+  width: 56px; height: 56px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  display: grid; place-items: center;
+  font-weight: 600;
+  font-size: 19px;
+  border: 0.5px solid var(--hairline);
+  flex-shrink: 0;
+}
