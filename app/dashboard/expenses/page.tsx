@@ -3,12 +3,8 @@ import { AddExpenseButton } from "@/components/AddExpenseButton";
 import { FilterBar } from "@/components/FilterBar";
 import { ExpenseList } from "@/components/ExpenseList";
 import { MobileExpenses } from "@/components/MobileExpenses";
-import {
-  endOfMonth,
-  fmtISODate,
-  formatINR,
-  startOfMonth,
-} from "@/lib/dates";
+import { formatINR } from "@/lib/dates";
+import { parseRangeParams, rangeBounds } from "@/lib/rangeFilter";
 import type { Category, ExpenseLite } from "@/lib/types";
 
 type Row = {
@@ -20,44 +16,26 @@ type Row = {
   categories: { name: string; icon: string | null } | null;
 };
 
-const VALID_RANGES = new Set([
-  "thismonth",
-  "lastmonth",
-  "last30",
-  "all",
-] as const);
-type Range = "thismonth" | "lastmonth" | "last30" | "all";
-
-function rangeBounds(range: Range): { from?: string; to?: string } {
-  const today = new Date();
-  if (range === "thismonth") {
-    return {
-      from: fmtISODate(startOfMonth(today)),
-      to: fmtISODate(endOfMonth(today)),
-    };
-  }
-  if (range === "lastmonth") {
-    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const end = new Date(today.getFullYear(), today.getMonth(), 0);
-    return { from: fmtISODate(start), to: fmtISODate(end) };
-  }
-  if (range === "last30") {
-    const start = new Date(today);
-    start.setDate(start.getDate() - 30);
-    return { from: fmtISODate(start), to: fmtISODate(today) };
-  }
-  return {};
-}
-
 export default async function ExpensesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string; cat?: string }>;
+  searchParams: Promise<{
+    range?: string;
+    cat?: string;
+    from?: string;
+    to?: string;
+  }>;
 }) {
   const params = await searchParams;
-  const range: Range = VALID_RANGES.has(params.range as Range)
-    ? (params.range as Range)
-    : "thismonth";
+  const {
+    range,
+    from: customFrom,
+    to: customTo,
+  } = parseRangeParams({
+    range: params.range,
+    from: params.from,
+    to: params.to,
+  });
   const categoryId = params.cat ?? null;
 
   const supabase = await createSupabaseServerClient();
@@ -72,7 +50,7 @@ export default async function ExpensesPage({
         )
         .order("spent_on", { ascending: false });
 
-      const { from, to } = rangeBounds(range);
+      const { from, to } = rangeBounds(range, customFrom, customTo);
       if (from) q = q.gte("spent_on", from);
       if (to) q = q.lte("spent_on", to);
       if (categoryId) q = q.eq("category_id", categoryId);
@@ -83,6 +61,9 @@ export default async function ExpensesPage({
 
   const categories: Category[] = (catRows ?? []) as Category[];
   const { data, error } = expensesQuery;
+  if (error) {
+    console.error("[expenses] Supabase query failed:", error);
+  }
 
   const expenses: ExpenseLite[] = ((data ?? []) as unknown as Row[]).map(
     (r) => ({
@@ -97,6 +78,7 @@ export default async function ExpensesPage({
   );
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
+  const isFiltered = categoryId !== null || range !== "all";
 
   return (
     <main className="content">
@@ -123,6 +105,8 @@ export default async function ExpensesPage({
           categories={categories}
           currentRange={range}
           currentCategoryId={categoryId}
+          customFrom={customFrom}
+          customTo={customTo}
         />
 
         {error ? (
@@ -131,14 +115,14 @@ export default async function ExpensesPage({
             <div className="display" style={{ fontSize: 24, marginBottom: 4 }}>
               Couldn&apos;t load expenses.
             </div>
-            <p className="muted">{error.message}</p>
+            <p className="muted">
+              Something went wrong. Please refresh and try again.
+            </p>
           </div>
         ) : (
           <ExpenseList
             expenses={expenses}
-            empty={
-              <EmptyState filtered={categoryId !== null || range !== "all"} />
-            }
+            empty={<EmptyState filtered={isFiltered} />}
           />
         )}
       </section>
@@ -150,7 +134,9 @@ export default async function ExpensesPage({
             <div className="m-empty">
               <div className="emoji">⚠️</div>
               <div className="ttl">Couldn&apos;t load expenses.</div>
-              <div className="sub">{error.message}</div>
+              <div className="sub">
+                Something went wrong. Please refresh and try again.
+              </div>
             </div>
           </div>
         ) : (

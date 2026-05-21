@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useExpenseModals } from "./ExpenseModals";
 import { metaFor } from "@/lib/categories";
 import { fmtDay, fmtISODate, formatINR, parseISODate } from "@/lib/dates";
+import { MIN_ISO_DATE, customRangeSchema } from "@/lib/schemas";
 import type { Category, ExpenseLite } from "@/lib/types";
 
 type Group = { dateISO: string; date: Date; items: ExpenseLite[] };
@@ -34,10 +35,24 @@ export function MobileExpenses({
   const { openEdit } = useExpenseModals();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
+  // Why: mobile filters stay local — the server already returned the URL-default
+  // window, so the date chip narrows within that without re-fetching.
+  const [dateOpen, setDateOpen] = useState(false);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [appliedFrom, setAppliedFrom] = useState<string | null>(null);
+  const [appliedTo, setAppliedTo] = useState<string | null>(null);
+
+  const todayISO = useMemo(() => fmtISODate(new Date()), []);
 
   const filtered = useMemo(() => {
     let r = expenses;
     if (cat) r = r.filter((e) => e.category_id === cat);
+    if (appliedFrom && appliedTo) {
+      r = r.filter(
+        (e) => e.spent_on >= appliedFrom && e.spent_on <= appliedTo,
+      );
+    }
     const needle = q.trim().toLowerCase();
     if (needle) {
       r = r.filter(
@@ -47,7 +62,7 @@ export function MobileExpenses({
       );
     }
     return r;
-  }, [expenses, q, cat]);
+  }, [expenses, q, cat, appliedFrom, appliedTo]);
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
   const today = fmtISODate(new Date());
@@ -56,6 +71,31 @@ export function MobileExpenses({
     d.setDate(d.getDate() - 1);
     return fmtISODate(d);
   })();
+
+  const dateError: string | null = (() => {
+    if (!dateFrom || !dateTo) return null;
+    const result = customRangeSchema.safeParse({
+      from: dateFrom,
+      to: dateTo,
+    });
+    return result.success ? null : result.error.issues[0].message;
+  })();
+  const dateApplyDisabled = !dateFrom || !dateTo || dateError !== null;
+
+  function applyDate() {
+    if (dateApplyDisabled) return;
+    setAppliedFrom(dateFrom);
+    setAppliedTo(dateTo);
+    setDateOpen(false);
+  }
+
+  function clearDate() {
+    setAppliedFrom(null);
+    setAppliedTo(null);
+    setDateFrom("");
+    setDateTo("");
+    setDateOpen(false);
+  }
 
   return (
     <>
@@ -87,6 +127,29 @@ export function MobileExpenses({
         >
           All
         </button>
+        <button
+          type="button"
+          className={`chip${dateOpen || appliedFrom ? " active" : ""}`}
+          onClick={() => setDateOpen((open) => !open)}
+          aria-expanded={dateOpen}
+        >
+          <span aria-hidden>📅</span>
+          <span>Date</span>
+        </button>
+        {appliedFrom && appliedTo && (
+          <button
+            type="button"
+            className="chip chip-dismiss"
+            onClick={clearDate}
+            aria-label="Clear date filter"
+          >
+            <span>
+              {fmtDay(parseISODate(appliedFrom))} –{" "}
+              {fmtDay(parseISODate(appliedTo))}
+            </span>
+            <span aria-hidden>✕</span>
+          </button>
+        )}
         {categories.map((c) => {
           const meta = metaFor(c.name);
           return (
@@ -102,6 +165,51 @@ export function MobileExpenses({
           );
         })}
       </div>
+
+      {dateOpen && (
+        <div className="m-date-row">
+          <div className="m-date-inputs">
+            <label className="m-date-field">
+              <span className="label">From</span>
+              <input
+                type="date"
+                className="input"
+                value={dateFrom}
+                min={MIN_ISO_DATE}
+                max={todayISO}
+                onChange={(e) => setDateFrom(e.target.value)}
+                aria-invalid={dateError ? true : undefined}
+              />
+            </label>
+            <label className="m-date-field">
+              <span className="label">To</span>
+              <input
+                type="date"
+                className="input"
+                value={dateTo}
+                min={MIN_ISO_DATE}
+                max={todayISO}
+                onChange={(e) => setDateTo(e.target.value)}
+                aria-invalid={dateError ? true : undefined}
+              />
+            </label>
+          </div>
+          {dateError && <div className="field-error">{dateError}</div>}
+          <div className="m-date-actions">
+            <button type="button" className="btn ghost sm" onClick={clearDate}>
+              Clear
+            </button>
+            <button
+              type="button"
+              className="btn sm"
+              onClick={applyDate}
+              disabled={dateApplyDisabled}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <div className="m-card">
