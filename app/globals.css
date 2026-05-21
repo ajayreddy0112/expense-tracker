@@ -1367,3 +1367,81 @@ button { font-family: inherit; }
   border: 0.5px solid var(--hairline);
   flex-shrink: 0;
 }
+
+/* —————————————————————————————————————————————————————————
+   Custom date range — desktop in-bar panel + caption
+   ————————————————————————————————————————————————————————— */
+.bar-range {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.bar-range-caption {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.range-popover {
+  width: min(320px, 100%);
+  padding: 12px;
+  background: var(--paper);
+  border: 0.5px solid var(--hairline);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.range-popover-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.range-popover-field {
+  display: flex;
+  flex-direction: column;
+}
+.range-popover-field .label { margin-bottom: 4px; }
+.range-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* —————————————————————————————————————————————————————————
+   Custom date range — mobile inline row + dismissable pill
+   ————————————————————————————————————————————————————————— */
+.m-date-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  margin: 0 0 14px;
+  background: var(--paper);
+  border: 0.5px solid var(--hairline);
+  border-radius: var(--r-md);
+}
+.m-date-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.m-date-field {
+  display: flex;
+  flex-direction: column;
+}
+.m-date-field .label { margin-bottom: 4px; }
+.m-date-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.chip.chip-dismiss {
+  background: var(--ink-900);
+  color: var(--paper);
+  border-color: var(--ink-900);
+  gap: 8px;
+}
+.chip.chip-dismiss:hover {
+  background: var(--ink-800);
+}

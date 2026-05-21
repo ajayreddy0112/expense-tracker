@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { parseISODate } from "./dates";
+import { fmtISODate, parseISODate } from "./dates";
+
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+export const MIN_ISO_DATE = "1900-01-01";
 
 export const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -93,3 +96,42 @@ export const expenseSchema = z.object({
 });
 
 export type ExpenseInput = z.infer<typeof expenseSchema>;
+
+// ── Custom date range filter for the expenses page ────────────
+export const customRangeSchema = z
+  .object({
+    from: z.string().regex(ISO_DATE, "Pick a valid start date"),
+    to: z.string().regex(ISO_DATE, "Pick a valid end date"),
+  })
+  .superRefine((d, ctx) => {
+    if (d.from < MIN_ISO_DATE) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["from"],
+        message: "Dates must be after 1900",
+      });
+    }
+    if (d.to < MIN_ISO_DATE) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["to"],
+        message: "Dates must be after 1900",
+      });
+    }
+    if (d.to > fmtISODate(new Date())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["to"],
+        message: "End date can’t be in the future",
+      });
+    }
+    if (d.from > d.to) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["from"],
+        message: "Start date must be before end date",
+      });
+    }
+  });
+
+export type CustomRangeInput = z.infer<typeof customRangeSchema>;
